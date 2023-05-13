@@ -1,8 +1,8 @@
 const Product = require('../models/product');
 
-const getProductsDb = () => {
-  const products = Product.find();
-  return products;
+const getProductsDb = (id) => {
+  if(!id) return Product.find();
+  return Product.findById(id)
 };
 
 const productsDbSave = (product) => {
@@ -17,6 +17,7 @@ const productsDbSave = (product) => {
     rating,
     numReviews,
     description,
+    imageCategory,
   } = product;
   const newProduct = new Product({
     name,
@@ -31,6 +32,9 @@ const productsDbSave = (product) => {
       rating: rating ?? 0,
       numReviews: numReviews ?? 0,
       description,
+      imageCategory:
+        imageCategory ??
+        "https://jumboargentina.vtexassets.com/arquivos/ids/537347-800-auto?v=636972888517500000&width=800&height=auto&aspect=true",
   })
   return newProduct.save();
 }
@@ -48,6 +52,7 @@ const productUpdate = (productApi,id) => {
     description,
     rating,
     numReviews,
+    imageCategory,
   } = productApi
   return Product.findById(id)
   .then(product=>{
@@ -63,6 +68,7 @@ const productUpdate = (productApi,id) => {
       product.description = description ?? product.description;
       product.rating = rating ?? product.rating;
       product.numReviews = numReviews ?? product.numReviews;
+      product.imageCategory = imageCategory ?? product.imageCategory;
       return product.save();
     }else{
       throw {status:404,message:"Product Not Found"}
@@ -70,13 +76,30 @@ const productUpdate = (productApi,id) => {
   }).catch(error=>error);
 }
 
-const getProductId = (id)=>{
-  return Product.findById(id);
-}
+const productReviewDb = (id,user,review) =>{
+  return Product.findById(id)
+  .then(product=>{
+    if(!product){
+      throw {status:404,message:"Product Not Found"};
+    }else{
+      if(product.reviews.some(({name})=>name === user)) throw {status:400,message:"You already submitted a review"};
+      const newReview = {
+        name:user,
+        ...review,
+      };
+      product.reviews.push(newReview);
+      product.numReviews = product.reviews.length;
+      product.rating = product.reviews.reduce((revies,product)=>product.rating + revies,0)/product.numReviews
+      return product.save();
+    }
+  })
+  .then(product=>product.reviews[product.reviews.length - 1]);
+};
+
 
 module.exports = {
   getProductsDb,
   productsDbSave,
   productUpdate,
-  getProductId,
+  productReviewDb,
 };

@@ -75,8 +75,56 @@ const orderSummaryDb = () => {
   });
 };
 
+
+const orderUserIdDb=(id)=>{
+  return Order.find({user:id});
+};
+
+const orderFindIdDb = (id) => {
+  return Order.findById(id)
+};
+const orderPayDb = (id,payment) => {
+  return Order.findById(id)
+  .then(order=>{
+    if (order) {
+      order.isPaid = true;
+      order.paidAt = Date.now();
+      order.paymentResult = payment;
+      return order.save();
+    }
+    else{
+      throw {status:404,message:"Order Not Found"}
+    }
+  })
+};
+const orderDeliverDb = (id) =>{
+  return Order.findById(id)
+  .then(order=>{
+    if(order){
+      order.isDelivered =true;
+      order.deliveredAt = Date.now();
+      return order.save();
+    }
+    else throw {status:404,message:"Order Not Found"}
+  })
+};
+const orderDeleteDb = (id) => {
+  return Order.findById(id)
+  .then(order=>{
+    if(order){
+      return order.update({active:false})
+    }
+    else throw {status:404,message:"Order Not Found"}
+  })
+};
+
 module.exports = {
   getOrders,
   createOrderDb,
   orderSummaryDb,
+  orderUserIdDb,
+  orderFindIdDb,
+  orderPayDb,
+  orderDeliverDb,
+  orderDeleteDb,
 };

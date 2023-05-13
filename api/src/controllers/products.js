@@ -1,4 +1,4 @@
-const {getProductsDb, productsDbSave, productUpdate,getProductId} = require('../services/products');
+const {getProductsDb, productsDbSave, productUpdate, productReviewDb} = require('../services/products');
 
 const getProducts = (req,res,next)=>{
   getProductsDb()
@@ -25,7 +25,7 @@ const putProduct = (req,res,next) => {
 
 const getSlug = (req,res,next) => {
   const {id} = req.params;
-  getProductId(id)
+  getProductsDb(id)
   .then(product=>{
     if(!product){
       return next({status:404,message:"No se encontro el item"})
@@ -34,10 +34,20 @@ const getSlug = (req,res,next) => {
   })
   .catch(error=>next(error))
 }
+const createReviews = (req,res,next) => {
+  const id = req.params.id;
+  const user = req.user.name;
+  const review = req.body;
+  return productReviewDb(id,user,review)
+  .then(review=>res.status(201).json({message:"Review Created",review}))
+  .catch(next);
+
+}; 
 
 module.exports = {
   getProducts,
   postProducts,
   putProduct,
   getSlug,
+  createReviews,
 }
